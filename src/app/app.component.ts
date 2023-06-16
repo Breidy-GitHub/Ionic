@@ -1,18 +1,56 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
+import { AlertController } from '@ionic/angular';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
 })
-export class AppComponent {
-  public appPages = [
-    { title: 'Inbox', url: '/folder/inbox', icon: 'mail' },
-    { title: 'Outbox', url: '/folder/outbox', icon: 'paper-plane' },
-    { title: 'Favorites', url: '/folder/favorites', icon: 'heart' },
-    { title: 'Archived', url: '/folder/archived', icon: 'archive' },
-    { title: 'Trash', url: '/folder/trash', icon: 'trash' },
-    { title: 'Spam', url: '/folder/spam', icon: 'warning' },
-  ];
-  public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-  constructor() {}
+export class AppComponent implements OnDestroy {
+  username: string = '';
+  password: string = '';
+  backdropTapListener: any;
+  alertOverlay: HTMLIonAlertElement | undefined;
+
+  constructor(private router: Router, private alertController: AlertController) {
+    this.alertOverlay = undefined;
+  }
+
+  async presentAlert() {
+    const alert = await this.alertController.create({
+      header: 'Credenciales incorrectas',
+      message: 'Por favor, intenta nuevamente.',
+      buttons: ['OK']
+    });
+
+    await alert.present();
+
+
+    this.alertOverlay = await this.alertController.getTop();
+    if (this.alertOverlay) {
+      this.backdropTapListener = this.backdropTapHandler.bind(this);
+      this.alertOverlay.addEventListener('ionBackdropTap', this.backdropTapListener);
+    }
+  }
+
+  backdropTapHandler(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  login() {
+    if (this.username === 'arparra' && this.password === '1234') {
+      this.router.navigate(['/home']);
+    } else {
+      this.presentAlert();
+    }
+  }
+
+  ngOnDestroy() {
+    // Remover el listener cuando el componente se destruye
+    if (this.alertOverlay) {
+      this.alertOverlay.removeEventListener('ionBackdropTap', this.backdropTapListener);
+    }
+  }
 }
